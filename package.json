@@ -1,0 +1,24 @@
+{
+  "name": "online-pdf-chat-web-server",
+  "version": "1.0.50",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "NODE_ENV=development bun run --watch src/index.ts",
+    "start": "NODE_ENV=production bun run src/index.ts"
+  },
+  "dependencies": {
+    "@elysiajs/bearer": "^1.1.1",
+    "@elysiajs/cors": "^1.1.0",
+    "@google/generative-ai": "^0.21.0",
+    "@mistralai/mistralai": "^1.0.2",
+    "elysia": "^1.1.4",
+    "firebase-admin": "^12.2.0",
+    "mongoose": "^8.5.1",
+    "openai": "^4.56.0",
+    "pdfjs-dist": "^4.5.136"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "module": "src/index.js"
+}
