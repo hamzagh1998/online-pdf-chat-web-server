@@ -13,7 +13,7 @@ RUN bun install
 COPY ./src ./src
 
 # Copy the .env file into the build stage (optional, if needed during build)
-COPY .env .env
+# COPY .env .env
 
 # Set environment variable for production
 ENV NODE_ENV=production
