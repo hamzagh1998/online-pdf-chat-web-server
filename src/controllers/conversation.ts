@@ -124,7 +124,7 @@ export const conversation = new Elysia({
 
         const joinMessage = `${user.firstName || ""} ${
           user.lastName || ""
-        } has entered the conversation.`;
+        } joined the conversation.`;
 
         // Fetch initial conversation messages
         const conversation = await ConversationService.getConversationMessages(
