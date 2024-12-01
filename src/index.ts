@@ -20,7 +20,7 @@ admin.initializeApp({
 const PORT = process.env.PORT || 4000;
 const DB_URI =
   process.env.NODE_ENV === "production"
-    ? process.env.MONGO_PROD_URL!
+    ? process.env.MONGO_PRO_URL!
     : process.env.MONGO_DEV_URL!;
 
 // Connect to db
