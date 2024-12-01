@@ -194,7 +194,7 @@ export const conversation = new Elysia({
       const userEmail = ws.data.email;
 
       if (conversationId && userEmail) {
-        const leaveMessage = `${userEmail} has left the chat.`;
+        const leaveMessage = `${userEmail} left the chat.`;
         ws.unsubscribe(conversationId);
         ws.publish(conversationId, {
           type: "notification",
