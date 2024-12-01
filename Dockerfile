@@ -34,8 +34,8 @@ WORKDIR /app
 # Copy the built server from the build stage
 COPY --from=build /app/server server
 
-# Copy the .env file from the build stage (so it's available at runtime)
-COPY --from=build /app/.env .env
+#  Copy the .env file from the build stage (so it's available at runtime)
+# COPY --from=build /app/.env .env
 
 # Set environment variable for production in the final image
 ENV NODE_ENV=production
