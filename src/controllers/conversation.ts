@@ -12,6 +12,7 @@ interface ParticipantParams {
   userId: string;
 }
 
+const connectedUsers: any = {};
 // Adjust the type for WebSocket handlers
 export const conversation = new Elysia({
   prefix: "/conversation",
@@ -110,21 +111,28 @@ export const conversation = new Elysia({
         return ws.close();
       }
 
+      if (!connectedUsers[conversationId]) {
+        connectedUsers[conversationId] = [];
+      }
+
       try {
         // Verify Firebase token
         const decodedToken = await admin.auth().verifyIdToken(fbToken);
         ws.data.email = decodedToken?.email || decodedToken.user_id;
 
         const user = await userRepository.findOne({ email: ws.data.email });
-
         if (!user) {
           console.error("User not found, closing WebSocket");
           return ws.close();
         }
 
+        if (!connectedUsers[conversationId].includes(user.email)) {
+          connectedUsers[conversationId].push(user.email);
+        } else return;
+
         const joinMessage = `${user.firstName || ""} ${
           user.lastName || ""
-        } joined the conversation.`;
+        } joined the chat.`;
 
         // Fetch initial conversation messages
         const conversation = await ConversationService.getConversationMessages(
@@ -134,7 +142,7 @@ export const conversation = new Elysia({
         if (conversation.error) {
           ws.publish(conversationId, {
             type: "notification",
-            content: "Error couldn't get conversation messages.",
+            content: "Error couldn't get chat messages.",
           });
           return ws.close();
         }
@@ -192,6 +200,10 @@ export const conversation = new Elysia({
     close(ws: any) {
       const conversationId = ws.data.query.conversationId;
       const userEmail = ws.data.email;
+
+      connectedUsers[conversationId] = connectedUsers[conversationId].filter(
+        (email: string) => email !== userEmail
+      );
 
       if (conversationId && userEmail) {
         const leaveMessage = `${userEmail} left the chat.`;
