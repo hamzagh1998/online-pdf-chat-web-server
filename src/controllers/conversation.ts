@@ -106,8 +106,6 @@ export const conversation = new Elysia({
       const fbToken = ws.data.query.token;
       const conversationId = ws.data.query.conversationId;
 
-      console.log(conversationId);
-
       if (!fbToken || !conversationId) {
         console.error("Missing token or conversationId, closing WebSocket");
         return ws.close();
