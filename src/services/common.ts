@@ -7,8 +7,6 @@ import { ReturnType } from "./types";
 
 import { conversationRepository } from "../db/conversation-repository";
 import { ConversationDocument } from "../models/conversation";
-import { messageRepository } from "../db/message-repository";
-import { MessageDocument } from "../models/messages";
 
 import { tryToCatch } from "../utils/try-to-catch";
 import { UserDocument } from "../models/user";

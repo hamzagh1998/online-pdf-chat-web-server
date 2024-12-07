@@ -106,6 +106,8 @@ export const conversation = new Elysia({
       const fbToken = ws.data.query.token;
       const conversationId = ws.data.query.conversationId;
 
+      console.log(conversationId);
+
       if (!fbToken || !conversationId) {
         console.error("Missing token or conversationId, closing WebSocket");
         return ws.close();
@@ -128,7 +130,9 @@ export const conversation = new Elysia({
 
         if (!connectedUsers[conversationId].includes(user.email)) {
           connectedUsers[conversationId].push(user.email);
-        } else return;
+        } else {
+          return ws.close();
+        }
 
         const joinMessage = `${user.firstName || ""} ${
           user.lastName || ""
@@ -143,10 +147,18 @@ export const conversation = new Elysia({
           ws.publish(conversationId, {
             type: "notification",
             content: "Error couldn't get chat messages.",
+            onlineUsers: connectedUsers[conversationId],
           });
           return ws.close();
         }
 
+        if (connectedUsers[conversationId].length > 1) {
+          ws.send({
+            message:
+              connectedUsers[conversationId].length - 1 + " user(s) online",
+            onlineUsers: connectedUsers[conversationId],
+          });
+        }
         // Subscribe to the conversation room
         ws.subscribe(conversationId);
 
@@ -154,6 +166,7 @@ export const conversation = new Elysia({
         ws.publish(conversationId, {
           type: "joining",
           content: joinMessage,
+          onlineUsers: connectedUsers[conversationId],
         });
       } catch (error) {
         console.error("Error during WebSocket open:", error);
@@ -173,7 +186,8 @@ export const conversation = new Elysia({
           await ConversationService.sendQuestion(
             conversationId,
             message.data.userId,
-            message.data.message
+            message.data.message,
+            message.data.to
           );
           const responseMessage = {
             type: "messages",
@@ -197,7 +211,7 @@ export const conversation = new Elysia({
         console.error("Error handling WebSocket message:", error);
       }
     },
-    close(ws: any) {
+    async close(ws: any) {
       const conversationId = ws.data.query.conversationId;
       const userEmail = ws.data.email;
 
@@ -206,11 +220,19 @@ export const conversation = new Elysia({
       );
 
       if (conversationId && userEmail) {
-        const leaveMessage = `${userEmail} left the chat.`;
+        const useDoc = await userRepository.findOne({ email: userEmail });
+        if (!useDoc) {
+          return ws.close();
+        }
+
+        const leaveMessage = `${
+          useDoc.firstName + "  " + useDoc.lastName
+        } left the chat!`;
         ws.unsubscribe(conversationId);
         ws.publish(conversationId, {
           type: "notification",
           content: leaveMessage,
+          onlineUsers: connectedUsers[conversationId],
         });
       }
     },

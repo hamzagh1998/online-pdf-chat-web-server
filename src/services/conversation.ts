@@ -141,7 +141,7 @@ export abstract class ConversationService extends Common {
     const [error, participants] = await tryToCatch<UserDocument[] | null>(() =>
       userRepository.find(
         { _id: { $in: (conversationDoc.detail as any).participants } },
-        { __v: 0, email: 0, plan: 0, updatedAt: 0 }
+        { __v: 0, plan: 0, updatedAt: 0 }
       )
     );
     if (error) {
@@ -306,7 +306,8 @@ export abstract class ConversationService extends Common {
   static async sendQuestion(
     conversationId: string,
     userId: string,
-    msg: string
+    msg: string,
+    to: "AI" | "CHAT"
   ) {
     const conversationDoc = await this.getConversation(conversationId);
 
@@ -331,20 +332,38 @@ export abstract class ConversationService extends Common {
 
     const parsedPDFText = await this.parsePDF(pdfFileURL);
 
-    //* Save Answer: AI
-    const prompt = `Here is the content of the PDF document:\n\n${parsedPDFText}\n\nUser's question: ${msg}`;
-    const response = await aiResponse(prompt);
     await messageRepository.create({
       conversation: conversationId,
       sender: userId,
       content: msg,
     });
-    await messageRepository.create({
-      conversation: conversationId,
-      sender: userId,
-      content: response,
-      isAiResponse: true,
-    });
+
+    if (to === "AI") {
+      //* Save Answer: AI
+      const prompt = `
+        You are an AI assistant that can provide answers based on the content of a PDF document and from your general knowledge. 
+
+        Here is the content of the document:
+        ${parsedPDFText}
+
+        The user has asked the following question:
+        "${msg}"
+
+        ### Instructions:
+        1. Use the content of the PDF document above to answer the question to the best of your ability.
+        2. If additional context is needed or the question goes beyond the document's scope, feel free to include relevant general knowledge or information outside the PDF content.
+        3. If the user has asked similar questions before, you can refer to the previous answers or interactions to provide a more comprehensive response.
+
+        Provide a detailed, accurate, and relevant answer.
+        `;
+      const response = await aiResponse(prompt);
+      await messageRepository.create({
+        conversation: conversationId,
+        sender: userId,
+        content: response,
+        isAiResponse: true,
+      });
+    }
   }
 
   private static async parsePDF(pdfFileURL: string) {
