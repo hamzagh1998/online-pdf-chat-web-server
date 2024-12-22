@@ -338,6 +338,15 @@ export abstract class ConversationService extends Common {
       content: msg,
     });
 
+    const last10Messages = await messageRepository.find(
+      {},
+      { content: 1, isAiResponse: 1 },
+      { createdAt: -1 },
+      10
+    );
+
+    console.log(last10Messages);
+
     if (to === "AI") {
       //* Save Answer: AI
       const prompt = `
@@ -346,7 +355,19 @@ export abstract class ConversationService extends Common {
         Here is the content of the document:
         ${parsedPDFText}
 
-        The user has asked the following question:
+        
+        ${
+          last10Messages &&
+          "Here's the last 10 messages: of this conversation:\n" +
+            last10Messages
+              .map((message) => {
+                (message.isAiResponse ? "You answered: " : "User asked: ") +
+                  message.content;
+              })
+              .join("\n")
+        }
+
+        Now The user has asked this new question:
         "${msg}"
 
         ### Instructions:

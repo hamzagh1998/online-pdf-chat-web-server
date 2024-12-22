@@ -35,14 +35,24 @@ export abstract class EntityRepository<T extends Document> {
 
   async find(
     entityFilterQuery: FilterQuery<T>,
-    projctions?: Record<string, unknown>
+    projections?: Record<string, unknown>,
+    sort?: Record<string, 1 | -1>,
+    limit?: number
   ): Promise<Array<T> | null> {
-    return this.entityModel
-      .find(entityFilterQuery, {
-        __v: 0,
-        ...projctions,
-      })
-      .lean();
+    let query = this.entityModel.find(entityFilterQuery, {
+      __v: 0,
+      ...projections,
+    });
+
+    if (sort) {
+      query = query.sort(sort);
+    }
+
+    if (limit) {
+      query = query.limit(limit);
+    }
+
+    return query.lean();
   }
 
   async findOneAndUpdate(
