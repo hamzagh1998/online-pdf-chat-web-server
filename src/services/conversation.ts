@@ -1,7 +1,6 @@
 import * as pdfjsLib from "pdfjs-dist/build/pdf";
 import "pdfjs-dist/build/pdf.worker";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { ObjectId } from "mongoose";
 
 import { userRepository } from "../db/user-repository";
 import { UserDocument } from "../models/user";
@@ -340,29 +339,28 @@ export abstract class ConversationService extends Common {
 
     const last10Messages = await messageRepository.find(
       {},
-      { content: 1, isAiResponse: 1 },
+      { _id: 0, sender: 0, conversation: 0 },
       { createdAt: -1 },
       10
     );
-
-    console.log(last10Messages);
 
     if (to === "AI") {
       //* Save Answer: AI
       const prompt = `
         You are an AI assistant that can provide answers based on the content of a PDF document and from your general knowledge. 
-
+        \n
         Here is the content of the document:
         ${parsedPDFText}
-
-        
+        \n
         ${
           last10Messages &&
-          "Here's the last 10 messages: of this conversation:\n" +
+          "Here's the last messages of this conversation:\n" +
             last10Messages
               .map((message) => {
                 (message.isAiResponse ? "You answered: " : "User asked: ") +
-                  message.content;
+                  message.content +
+                  " At: " +
+                  message.timestamp.toISOString();
               })
               .join("\n")
         }

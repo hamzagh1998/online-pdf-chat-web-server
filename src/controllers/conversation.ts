@@ -129,6 +129,7 @@ export const conversation = new Elysia({
         if (!connectedUsers[conversationId].includes(user.email)) {
           connectedUsers[conversationId].push(user.email);
         } else {
+          console.log("User already connected, closing WebSocket");
           return ws.close();
         }
 

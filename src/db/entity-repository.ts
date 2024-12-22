@@ -39,10 +39,11 @@ export abstract class EntityRepository<T extends Document> {
     sort?: Record<string, 1 | -1>,
     limit?: number
   ): Promise<Array<T> | null> {
-    let query = this.entityModel.find(entityFilterQuery, {
-      __v: 0,
-      ...projections,
-    });
+    const sanitizedProjections = projections
+      ? { ...projections, __v: 0 }
+      : { __v: 0 };
+
+    let query = this.entityModel.find(entityFilterQuery, sanitizedProjections);
 
     if (sort) {
       query = query.sort(sort);
