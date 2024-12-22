@@ -347,34 +347,44 @@ export abstract class ConversationService extends Common {
     if (to === "AI") {
       //* Save Answer: AI
       const prompt = `
-        You are an AI assistant that can provide answers based on the content of a PDF document and from your general knowledge. 
-        \n
+      You are an AI assistant designed to provide answers based on the content of a PDF document and your general knowledge. You also retain context from previous messages to deliver responses that align with the ongoing conversation.
+
+      ### Context:
+      1. **PDF Content**: 
         Here is the content of the document:
         ${parsedPDFText}
-        \n
+
+      2. **Conversation History**: 
         ${
-          last10Messages &&
-          "Here's the last messages of this conversation:\n" +
-            last10Messages
-              .map((message) => {
-                (message.isAiResponse ? "You answered: " : "User asked: ") +
-                  message.content +
-                  " At: " +
-                  message.timestamp.toISOString();
-              })
-              .join("\n")
+          last10Messages && last10Messages.length > 0
+            ? "Here are the last messages in this conversation:\n" +
+              last10Messages
+                .map((message) =>
+                  message.isAiResponse
+                    ? `You answered: "${
+                        message.content
+                      }" at ${message.timestamp.toISOString()}`
+                    : `User asked: "${
+                        message.content
+                      }" at ${message.timestamp.toISOString()}`
+                )
+                .join("\n")
+            : "This is the start of a new conversation."
         }
 
-        Now The user has asked this new question:
-        "${msg}"
+      ### User's New Question:
+      "${msg}"
 
-        ### Instructions:
-        1. Use the content of the PDF document above to answer the question to the best of your ability.
-        2. If additional context is needed or the question goes beyond the document's scope, feel free to include relevant general knowledge or information outside the PDF content.
-        3. If the user has asked similar questions before, you can refer to the previous answers or interactions to provide a more comprehensive response.
+      ### Instructions for the AI:
+      1. **Leverage the PDF Content**: Use the information in the provided PDF document to construct a detailed and accurate answer.
+      2. **Incorporate Conversation History**: If the question is related to previous exchanges, reference those interactions to provide a cohesive response. For example, if the user asked a follow-up to a prior question, acknowledge and build upon the earlier answers.
+      3. **Expand with General Knowledge**: If the question requires context or information beyond the PDF content, include accurate and relevant general knowledge.
+      4. **Stay Relevant and Clear**: Ensure the response is tailored, concise, and focused on the user's query while making connections to past interactions when needed.
 
-        Provide a detailed, accurate, and relevant answer.
-        `;
+      ### Deliverables:
+      Provide a well-structured, detailed, and context-aware response to the user's question.
+      `;
+
       const response = await aiResponse(prompt);
       await messageRepository.create({
         conversation: conversationId,
