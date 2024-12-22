@@ -338,7 +338,7 @@ export abstract class ConversationService extends Common {
     });
 
     const last10Messages = await messageRepository.find(
-      {},
+      { conversation: conversationId, sender: userId },
       { _id: 0, sender: 0, conversation: 0 },
       { createdAt: -1 },
       10
