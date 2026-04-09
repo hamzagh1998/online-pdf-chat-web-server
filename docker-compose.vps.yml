@@ -1,0 +1,37 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: online-pdf-chat-mongodb
+    restart: unless-stopped
+    volumes:
+      - mongodb_data:/data/db
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: online-pdf-chat-api
+    depends_on:
+      - mongodb
+    env_file:
+      - .env
+    ports:
+      - "${API_PORT:-4000}:4000"
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ../online-pdf-chat-web-client
+      dockerfile: Dockerfile
+      args:
+        VITE_REACT_APP_API_BASE_PROD_URL: ${VITE_REACT_APP_API_BASE_PROD_URL}
+        VITE_REACT_APP_WS_BASE_PROD_URL: ${VITE_REACT_APP_WS_BASE_PROD_URL}
+    container_name: online-pdf-chat-client
+    depends_on:
+      - api
+    ports:
+      - "${CLIENT_PORT:-80}:80"
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
